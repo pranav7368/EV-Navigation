@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ConnectorType {
+  CCS2
+  CHADEMO
+  TYPE_2
+  GB_T
+  BHARAT_DC001
+}
+
+enum ChargerCurrent {
+  AC
+  DC
+}
+
+enum ChargerStatus {
+  OPERATIONAL
+  OUT_OF_SERVICE
+  UNKNOWN
+}
+
+enum TripPreference {
+  FASTEST
+  CHEAPEST
+  BALANCED
+}
+
+enum TripStatus {
+  PLANNED
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String
+  passwordHash String
+  role         UserRole      @default(USER)
+  vehicles     UserVehicle[]
+  trips        Trip[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model EVModel {
+  id                     String          @id @default(cuid())
+  manufacturer           String
+  model                  String
+  variant                String
+  batteryCapacityKwh     Float
+  ratedRangeKm           Float
+  maxAcChargingKw        Float
+  maxDcChargingKw        Float
+  connectorTypes         ConnectorType[]
+  efficiencyKwhPerKm     Float?
+  isActive               Boolean         @default(true)
+  vehicles               UserVehicle[]
+  trips                  Trip[]
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  @@unique([manufacturer, model, variant])
+  @@index([manufacturer, model])
+}
+
+model UserVehicle {
+  id          String   @id @default(cuid())
+  nickname    String?
+  registrationNumber String?
+  userId      String
+  evModelId   String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evModel     EVModel  @relation(fields: [evModelId], references: [id])
+  trips       Trip[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@unique([userId, registrationNumber])
+}
+
+model ChargingStation {
+  id           String     @id @default(cuid())
+  externalId   String?    @unique
+  name         String
+  operator     String
+  address      String
+  city         String
+  latitude     Float
+  longitude    Float
+  isDemo       Boolean    @default(false)
+  isActive     Boolean    @default(true)
+  chargers     Charger[]
+  tripStops    TripStop[]
+  recommendations Recommendation[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([latitude, longitude])
+  @@index([city, isActive])
+}
+
+model Charger {
+  id           String         @id @default(cuid())
+  stationId    String
+  connectorType ConnectorType
+  currentType  ChargerCurrent
+  powerKw      Float
+  pricePerKwh  Float
+  status       ChargerStatus  @default(UNKNOWN)
+  isDemoStatus Boolean        @default(true)
+  station      ChargingStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  tripStops    TripStop[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([stationId, connectorType, status])
+}
+
+model Trip {
+  id                  String          @id @default(cuid())
+  userId              String
+  evModelId           String
+  userVehicleId       String?
+  sourceLabel         String
+  sourceLatitude      Float
+  sourceLongitude     Float
+  destinationLabel    String
+  destinationLatitude Float
+  destinationLongitude Float
+  startingSoc         Float
+  minimumReserveSoc   Float
+  preference          TripPreference
+  status              TripStatus      @default(PLANNED)
+  routeDistanceKm     Float
+  routeDurationMinutes Float
+  directJourneyPossible Boolean
+  estimatedFinalSoc   Float
+  estimatedTotalMinutes Float
+  estimatedChargingCost Float         @default(0)
+  routeGeometry       Json
+  batteryAnalysis     Json
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evModel              EVModel        @relation(fields: [evModelId], references: [id])
+  userVehicle          UserVehicle?    @relation(fields: [userVehicleId], references: [id])
+  stops                TripStop[]
+  recommendations      Recommendation[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([evModelId])
+}
+
+model TripStop {
+  id                 String          @id @default(cuid())
+  tripId             String
+  stationId          String
+  chargerId          String?
+  sequence           Int
+  arrivalSoc         Float
+  targetSoc          Float
+  energyRequiredKwh  Float
+  estimatedMinutes   Float
+  estimatedCost      Float
+  detourKm           Float
+  trip               Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  station            ChargingStation @relation(fields: [stationId], references: [id])
+  charger            Charger?         @relation(fields: [chargerId], references: [id])
+  createdAt          DateTime         @default(now())
+
+  @@unique([tripId, sequence])
+  @@index([stationId])
+}
+
+model Recommendation {
+  id             String          @id @default(cuid())
+  tripId         String
+  stationId      String
+  finalScore     Float
+  rank           Int
+  scoreBreakdown Json
+  reason         String
+  isSelected     Boolean         @default(false)
+  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  station        ChargingStation @relation(fields: [stationId], references: [id])
+  createdAt      DateTime        @default(now())
+
+  @@unique([tripId, rank])
+  @@index([tripId, isSelected])
+}

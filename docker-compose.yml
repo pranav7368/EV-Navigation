@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: smartev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartev_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-smartev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - smartev-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  smartev-postgres-data:
+

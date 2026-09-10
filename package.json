@@ -1,0 +1,28 @@
+{
+  "name": "smartev-navigator",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": { "node": ">=20.9" },
+  "scripts": {
+    "predev": "pnpm --filter @smartev/shared build",
+    "dev": "pnpm --parallel --filter @smartev/api --filter @smartev/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "pretypecheck": "pnpm --filter @smartev/shared build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:e2e": "playwright test",
+    "db:generate": "pnpm --filter @smartev/api prisma:generate",
+    "db:migrate": "pnpm --filter @smartev/api prisma:migrate",
+    "db:seed": "pnpm --filter @smartev/api prisma:seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@playwright/test": "^1.55.0",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0"
+  }
+}
