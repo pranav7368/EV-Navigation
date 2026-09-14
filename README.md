@@ -1,3 +1,5 @@
+[![CI](https://github.com/pranav7368/EV-Navigation/actions/workflows/ci.yml/badge.svg)](https://github.com/pranav7368/EV-Navigation/actions/workflows/ci.yml)
+
 # SmartEV Navigator
 
 SmartEV Navigator is a postgraduate full-stack project for reserve-aware EV journey planning and explainable charging-station recommendation. It calculates a road route, models battery use, filters chargers by corridor, compatibility, and reachability, then ranks the feasible choices for **FASTEST**, **CHEAPEST**, or **BALANCED** objectives.
@@ -251,3 +253,7 @@ Add final report captures here after running the app:
 ## Research basis
 
 The implementation follows the official [Next.js App Router](https://nextjs.org/docs/app), [NestJS security guidance](https://docs.nestjs.com/security/authentication), [Prisma pnpm workspace guidance](https://www.prisma.io/docs/guides/deployment/pnpm-workspaces), [OSRM route API](https://project-osrm.org/docs/v5.24.0/api/#route-service), [Open Charge Map API project](https://openchargemap.io/site/develop/api), and [Leaflet documentation](https://leafletjs.com/reference.html).
+
+## License
+
+This project is available under the [MIT License](LICENSE).
